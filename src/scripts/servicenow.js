@@ -1,12 +1,19 @@
-function lookForElement(doc, id, callback) {
-    console.log("Looking for element with id: ", id, " in document: ", doc, "and URL: ", doc.URL);
+var in_iframe = false;
+
+console.log("Starting SSAssistant script for ServiceNow");
+
+function lookForElements(doc, ids, callback) {
+    console.log("Looking for elements with ids: ", ids, " in document: ", doc);
     const observer = new MutationObserver((mutations, obs) => {
-        const element = doc.getElementById(id);
-        if (element) {
-            obs.disconnect();
-            callback(element);
-            return;
-        }
+        ids.forEach((id) => {
+            const element = doc.getElementById(id);
+            if (element) {
+                console.log("Found element with id: ", id);
+                obs.disconnect();
+                callback(id, element);
+                return
+            }
+        });
     });
 
     observer.observe(doc, {
@@ -15,36 +22,76 @@ function lookForElement(doc, id, callback) {
     })
 }
 
-lookForElement(document, "gsft_main", async (gsft_main) => {
-    // wait if the iframe title has not changed
-    while (gsft_main.title == "Main Content") {
-        await new Promise(resolve => setTimeout(resolve, 1000));
-    }
-    if (gsft_main.title.indexOf("INC") < 0) {
-        console.log("Found page: ", gsft_main.title);
+function addCallButton(doc) {
+    const phoneElement = doc.getElementById("element.incident.u_alternate_contact_number");
+    if (!phoneElement) {
+        console.log("No phone element found");
         return;
     }
-    gsft_main = document.getElementById("gsft_main");
-    lookForElement(gsft_main.contentDocument || gsft_main.contentWindow.document, "element.incident.u_alternate_contact_number", (phoneElement) => {
-        addCallBotton(phoneElement.lastChild, (gsft_main.contentDocument || gsft_main.contentWindow.document).getElementById("incident.u_alternate_contact_number").value);
-    });
-});
 
-function addCallBotton(element, phoneNumber) {
+    let phoneNumber = doc.getElementById("incident.u_alternate_contact_number").value;
+    if (!phoneNumber) {
+        console.log("No phone number found");
+        return;
+    }
+
+
     // if the number isn't US, don't add the button
     if (phoneNumber.indexOf('+1') < 0) return;
 
     // add the 9 for HDC phones
-    phoneNumber = phoneNumber.replace('+1', '+19');
+    phoneNumber = phoneNumber.replace('+1', '9');
     console.log("Adding button for phone number: ", phoneNumber);
 
     // make the button and add it to the button box
     const span = document.createElement("span");
     span.innerHTML = `<button id="call.incident.u_alternate_contact_number" type="button" name="call.incident.u_alternate_contact_number" title="" aria-haspopup="true" style="display: ;" class="btn btn-default btn-ref icon icon-mobile" onclick="" tabindex="0" aria-label="Call listed number for field: Alternate contact number" data-original-title="Call listed number">&nbsp;</button>`;
-    element.appendChild(span);
+    phoneElement.lastChild.appendChild(span);
 
     // add the click event to call CM
     span.lastChild.addEventListener("click", () => {
-        window.open(`tel:${phoneNumber}`);
+        window.location.href = `tel:${phoneNumber}`;
     });
 }
+
+
+// run scripts on the document based on the current title
+function runScripts(doc) {
+    console.log("Running scripts on title: ", document.title);
+
+    if (document.title.indexOf("INC") >= 0) {
+        // we are on an INC page, try to add the call button
+        addCallButton(doc);
+    }
+    // add future scripts here to run whenever the page title changes
+}
+
+// run scripts whenever the page title changes
+async function monitorDocument() {
+    runScripts(in_iframe ? document.getElementById("gsft_main").contentDocument : document);
+
+    const observer = new MutationObserver((mutations, obs) => {
+        runScripts(in_iframe ? document.getElementById("gsft_main").contentDocument : document);
+    });
+
+    observer.observe(document.querySelector('title'), {
+        subtree: true,
+        characterData: true,
+        childList: true
+    });
+}
+
+// locate the main document to watch for changes
+lookForElements(document, ["gsft_main", "output_messages"], (id, element) => {
+    // if we found gsft_main, then we need to watch the iframe
+    if (id == "gsft_main") {
+        console.log("Found gsft_main, monitoring for changes");
+        in_iframe = true;
+    }
+    // if not, we need to monitor the main document since we found an output_messages element which is always inside the document we want to monitor
+    else {
+        console.log("Found output_messages, monitoring main document");
+        in_iframe = false;
+    }
+    monitorDocument();
+});

@@ -11,7 +11,6 @@
             "matches": [
                 "*://tamu.service-now.com/*"
             ],
-            "run_at": "document_idle",
             "js": [
                 "scripts/servicenow.js"
             ]
