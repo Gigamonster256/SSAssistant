@@ -1,3 +1,5 @@
+// global variable to tell if the main ServiceNow page is in an iframe
+// most of the time this will be true, but in some cases it will be false
 var in_iframe = false;
 
 console.log("Starting SSAssistant script for ServiceNow");
@@ -25,13 +27,13 @@ function lookForElements(doc, ids, callback) {
 function addCallButton(doc) {
     const phoneElement = doc.getElementById("element.incident.u_alternate_contact_number");
     if (!phoneElement) {
-        console.log("No phone element found");
+        console.log("Failed to add Call Button, no phone element found");
         return;
     }
 
     let phoneNumber = doc.getElementById("incident.u_alternate_contact_number").value;
     if (!phoneNumber) {
-        console.log("No phone number found");
+        console.log("Failed to add Call button, no phone number found");
         return;
     }
 
@@ -56,8 +58,10 @@ function addCallButton(doc) {
 
 
 // run scripts on the document based on the current title
-function runScripts(doc) {
+function runScripts() {
     console.log("Running scripts on title: ", document.title);
+
+    const doc = in_iframe ? document.getElementById("gsft_main").contentDocument : document;
 
     if (document.title.indexOf("INC") >= 0) {
         // we are on an INC page, try to add the call button
@@ -67,11 +71,11 @@ function runScripts(doc) {
 }
 
 // run scripts whenever the page title changes
-async function monitorDocument() {
-    runScripts(in_iframe ? document.getElementById("gsft_main").contentDocument : document);
+function monitorDocument() {
+    runScripts();
 
     const observer = new MutationObserver((mutations, obs) => {
-        runScripts(in_iframe ? document.getElementById("gsft_main").contentDocument : document);
+        runScripts();
     });
 
     observer.observe(document.querySelector('title'), {
@@ -81,7 +85,7 @@ async function monitorDocument() {
     });
 }
 
-// locate the main document to watch for changes
+// locate the main document to watch for changes and then watch it
 lookForElements(document, ["gsft_main", "output_messages"], (id, element) => {
     // if we found gsft_main, then we need to watch the iframe
     if (id == "gsft_main") {
