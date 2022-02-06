@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Options</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="container">
+        <div id="checkboxes">
+            <ul>
+                <li><input type="checkbox" id="send_empty_notifications">Send notifications when nobody is getting on or
+                    off</li>
+                <li><input type="checkbox" id="remove_rows">Filter out technicians who aren't currently on shift in
+                    Schedule Source</li>
+                <li><input type="checkbox" id="ignore_filter">Show all shifts no matter your selection</li>
+            </ul>
+        </div>
+
+
+        <div id="ask_minutes">
+            <p>Notify me of shift changes
+                <select id="before_minutes"></select>
+                minute(s) in advance
+            </p>
+            <i>If the extension is active, you'll have to toggle it off and back on for this change to take effect</i>
+        </div>
+
+        <button id="save_config"><strong>Save Configuration</strong>
+    </div>
+</body>
+<script src="options.js"></script>
+
+</html>

@@ -1,0 +1,50 @@
+#run_once {
+  height: 30px;
+  width: fit-content;
+  text-align: center;
+  outline: none;
+  margin: auto;
+  background-color: #db9704;
+  border-radius: 6px;
+  align-self: center;
+  font-weight: bold;
+  white-space: nowrap;
+  display: none;
+}
+#run_once:hover {
+  background-color: #f1c40f;
+}
+
+#extension_enable {
+  height: 30px;
+  width: auto;
+  outline: none;
+  margin: 10px;
+  background-color: #20b9d4;
+  border-radius: 6px;
+  align-self: center;
+  font-weight: bold;
+}
+#extension_enable:hover {
+  background-color: #14c8e7;
+}
+
+#checkboxes {
+  height: 75px;
+  margin: 3px;
+}
+
+#checkboxes ul {
+  margin: 3px;
+  list-style: none;
+  float: left;
+}
+
+.container {
+  width: 500px;
+  position: relative;
+}
+
+button {
+  margin: 10px;
+}
